@@ -1,0 +1,101 @@
+{#
+ # laptimecam
+ # Copyright (C) 2015 Mikko Novaro
+ #
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public License
+ # as published by the Free Software Foundation; either version 2
+ # of the License, or (at your option) any later version.
+ # 
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-#}
+
+{% extends "layout.html" -%}
+{% set activePage = "Capture" -%}
+
+{#--------------------------------------------------------------------------------#}
+
+{% block content -%}
+
+<div id="init_capture" class="mainitem">
+		Session name:
+		<input id="session_id" type="text" style="width: 300px" value=""/>
+		<span id="reset_name" class="button"><b>&lt;</b>Reset</span>
+		<span id="start" class="button">Start<b>&gt;&gt;&gt;</b></span>
+</div>
+
+<div id="active_capture" style="display: none" class="mainitem">
+		<span id="open_session_name"></span>
+		<a id="stop" href="" class="button">Stop</a>
+</div>
+
+{% endblock -%}
+
+{#--------------------------------------------------------------------------------#}
+
+{% block head -%}
+<script>
+function GenerateSessionName()
+{
+		var d = new Date();
+		return "{{ sessionNamePrefix }}"
+				+ d.getFullYear()
+				+ "-" + pad( d.getMonth() + 1, 2 )
+				+ "-" + pad( d.getDate(), 2 )
+				+ "_" + pad( d.getHours(), 2 )
+				+ ":" + pad( d.getMinutes(), 2 )
+				+ ":" + pad( d.getSeconds(), 2 )
+				+ "{{ sessionNameSuffix }}";
+}
+
+function RefreshCaptureList()
+{
+	// TODO: poll json session updates from cherrypy server and display them in the browser
+	$.getJSON( "capture_update.json", function( data ) {
+			} );
+}
+</script>
+{% endblock -%}
+
+{#--------------------------------------------------------------------------------#}
+
+{% block bodyend -%}
+<script>
+
+function StartCapture ( data )
+{
+		$( "#init_capture" ).hide();
+		$( "#open_session_name" ).text( data.name );
+		$( "#stop" ).attr( "href", "?page=session&name=" + encodeURIComponent( data.name ) );
+		$( "#active_capture" ).show();
+}
+
+$( document ).ready( function() {
+
+		$( "#session_id" ).val( GenerateSessionName() );
+
+		$( "#reset_name" ).click( function() {
+				$( "#session_id" ).val( GenerateSessionName() );
+				} );
+
+		$( "#start" ).click( function() {
+				$.getJSON( "capture.json?name=" + encodeURIComponent( $( "#session_id" ).val() )
+						, StartCapture ) } );
+
+
+		$( "#session_id" ).change( function() {
+			$.getJSON( "validate_session_name.json?val=" + encodeURIComponent( $( this ).val() ), function( data ) {
+				$( "#session_id" ).val( data.val );
+				} )
+			} );
+
+} );
+
+</script>
+{% endblock -%}

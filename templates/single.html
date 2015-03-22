@@ -1,0 +1,423 @@
+{#
+ # laptimecam
+ # Copyright (C) 2015 Mikko Novaro
+ #
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public License
+ # as published by the Free Software Foundation; either version 2
+ # of the License, or (at your option) any later version.
+ # 
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-#}
+
+{% extends "layout.html" -%}
+{% set activePage = "Session" -%}
+{% set footerColour = "#202020" -%}
+
+{#--------------------------------------------------------------------------------#}
+
+{#
+
+Possible types of frames:
+ - Starts new segment ( start ) <--- always when selected & when there's no active segment
+ - Part of the current segment ( lap ) <--- always when selected
+ - Ends current segment ( finish )
+ - Ends previous segment and starts new segment ( finish|start )
+
+0: not selected
+1: selected
+2: finish when not last
+3: finish|start
+
+#}
+
+{% block head -%}
+<link rel="stylesheet" type="text/css" href="dialogue.css">
+<script type="text/javascript" src="dialogue.js"></script>
+<script type="text/javascript" src="session.js"></script>
+{# https://github.com/Box9/jss #}
+<script type="text/javascript" src="import/jss.js"></script>
+<script>
+function ToggleSelected ( elem )
+{
+		if ( elem.hasClass( "selected" ) )
+		{
+				elem.attr( "kind", "0" );
+				elem.removeClass( "selected" );
+				elem.addClass( "captured" );
+				elem.find( ".reltime" ).text( "" );
+		}
+		else
+		{
+				elem.attr( "kind", "1" );
+				elem.removeClass( "captured" );
+				elem.addClass( "selected" );
+		}
+		UpdateImgBlock( elem );
+}
+
+function UpdateImgBlock ( elem )
+{
+		var kindlabel = elem.find( ".kindlabel" );
+		var kind = elem.attr( "kind" );
+		var item = elem.data( "json" );
+		if ( kind == "2" ) { kindlabel.text( "[split]" ); }
+		else if ( kind == "3" ) { kindlabel.text( "[end]" ); }
+		else { kindlabel.text( "" ); }
+}
+
+function TogglePreview ()
+{
+		if ( $( "#tool_preview" ).hasClass( "buttontoggle" ) )
+		{
+				$( "#tool_preview" ).removeClass( "buttontoggle" );
+				jss.set( ".captured", { "display" : "initial" } );
+				jss.set( ".gap", { "display" : "initial" } );
+				window.MyData.preview = false;
+				if ( $( ".cursor" ).length )
+				{
+						var cursor = $( ".cursor" ).get( 0 );
+						if ( ! IsVerticallyVisible( cursor ) ) { cursor.scrollIntoView(); }
+				}
+		}
+		else
+		{
+				$( "#tool_preview" ).addClass( "buttontoggle" );
+				jss.set( ".captured", { "display" : "none" } );
+				jss.set( ".gap", { "display" : "none" } );
+				window.MyData.preview = true;
+				if ( ! $( ".cursor.selected" ).length )
+				{
+						MoveCursor( $( ".selected:first" ) );
+				}
+		}
+}
+
+function MoveCursor ( elem )
+{
+		$( ".cursor" ).removeClass( "cursor" );
+		elem.addClass( "cursor" );
+		if ( ! IsVerticallyVisible( elem ) )
+		{
+				elem.get( 0 ).scrollIntoView();
+		}
+}
+
+function IsVerticallyVisible ( elem )
+{
+		if ( elem instanceof jQuery ) elem = elem[0]
+		if ( ! elem.nodeType ) return false;
+		var bcr = elem.getBoundingClientRect();
+		return -5 <= bcr.top && bcr.bottom <= $( window ).height() ;
+}
+
+function GetSelectedFrames ()
+{
+		var sel = [];
+		$( ".selected" ).each( function() {
+						var json = $( this ).data( "json" );
+						sel.push ( { "id" : json.id, "kind" : $( this ).attr( "kind" ) } );
+						} );
+		return sel;
+}
+
+</script>
+{% endblock -%}
+
+{#--------------------------------------------------------------------------------#}
+
+{% block content -%}
+
+<h1>{{ sessionId }}</h1>
+
+<table class="resulttable" style="margin-bottom: 20px">
+		<thead>
+		<tr>
+				<th>Lap</th>
+				<th>Distance</th>
+				<th>Time</th>
+				<th>Lap time</th>
+				<th>Lap speed</th>
+				<th>Avg. speed</th>
+		</tr>
+		</thead>
+		<tbody id="times">
+		</tbody>
+</table>
+
+<div id="images"></div>
+<p style="clear: both"></p>
+
+<div class="tools">
+		<span class="button" id="tool_gaps" style="display: none">Select gaps</span>
+		<span class="button" id="tool_clear">Clear</span>
+		<span class="button" id="tool_preview" style="display: none"><span style="text-decoration: underline">P</span>review</span>
+		<span class="button" id="tool_save">Save</span>
+</div>
+
+{% endblock -%}
+
+{#--------------------------------------------------------------------------------#}
+
+{% block bodyend -%}
+<div style="display: none" id="dialogue">
+		Are you sure you want to save? This operation will discard any
+		unselected frames.
+</div>
+
+<script>
+$( document ).ready( function() {
+
+		window.MyData = {
+			preview : false
+		};
+
+		$( document ).keydown( function( event ) {
+				var key = {
+					PAGE_UP : 33
+					, PAGE_DOWN : 34
+					, LEFT : 37
+					, RIGHT : 39
+					, P : 80
+					, SPACE : 32
+					, SHIFT : 16
+					, Z : 90
+				};
+
+				if ( event.which == key.Z )
+				{
+						var sel = $( ".cursor.selected" );
+						if ( sel.length )
+						{
+							var kind = sel.attr( "kind" );
+							kind = ( ( kind ) % 3 ) + 1;
+							sel.attr( "kind", kind );
+							UpdateImgBlock( sel );
+							UpdateCalculatedTimes();
+						}
+				}
+
+				if ( ! window.MyData.preview )
+				{
+						/* "smart" page up and down in normal mode
+						 * 
+						 * move to images after gaps OR selected images
+						 */
+						if ( event.which == key.PAGE_DOWN )
+						{
+								var next = $( ".cursor" ).nextAll( ".gap + .imgblock:not(.gap), .selected" ).first();
+								if ( next.length )
+								{
+										MoveCursor( next );
+										event.preventDefault();
+								}
+						}
+						if ( event.which == key.PAGE_UP )
+						{
+								if ( ! IsVerticallyVisible( $( ".cursor" ) ) )
+								{
+										$( ".cursor" ).get(0).scrollIntoView();
+										event.preventDefault();
+								}
+								else
+								{
+										var prev = $( ".cursor" ).prevAll( ".gap + .imgblock:not(.gap), .selected" ).first();
+										if ( prev.length )
+										{
+												MoveCursor( prev );
+												event.preventDefault();
+										}
+								}
+						}
+				}
+
+				/*
+				 * dragging left and right
+				 */
+				if ( event.shiftKey == true )
+				{
+						var cursor = $( ".cursor.selected:first" ); // require selected under cursor
+						if ( cursor.length )
+						{
+								if ( event.which == key.LEFT )
+								{
+										var prev = cursor.prev( ".imgblock:not(.gap, .selected)" );
+										if ( prev.length )
+										{
+												ToggleSelected( cursor );
+												ToggleSelected( prev );
+												MoveCursor( prev );
+												UpdateCalculatedTimes();
+												event.preventDefault();
+										}
+								}
+								if ( event.which == key.RIGHT )
+								{
+										var next = cursor.next( ".imgblock:not(.gap, .selected)" );
+										if ( next.length )
+										{
+												ToggleSelected( cursor );
+												ToggleSelected( next );
+												MoveCursor( next );
+												UpdateCalculatedTimes();
+												event.preventDefault();
+										}
+								}
+						}
+						else
+						{
+								event.shiftKey = false; // to allow non-drag movement with shift
+						}
+				}
+
+				/*
+				 * moving left and right
+				 */
+				if ( window.MyData.preview )
+				{
+						var horizSelect = ".selected";
+				}
+				else
+				{
+						var horizSelect = ".imgblock:not(.gap)";
+				}
+				if ( event.shiftKey == false )
+				{
+						if ( event.which == key.LEFT )
+						{
+								var prev = $( ".cursor" ).prevAll( horizSelect ).first();
+								if ( prev.length )
+								{
+										MoveCursor( prev );
+										event.preventDefault();
+								}
+						}
+						if ( event.which == key.RIGHT )
+						{
+								var next = $( ".cursor" ).nextAll( horizSelect ).first();
+								if ( next.length )
+								{
+										MoveCursor( next );
+										event.preventDefault();
+								}
+						}
+				}
+
+				if ( !window.MyData.preview && event.which == key.SPACE )
+				{
+						ToggleSelected( $( ".cursor" ) );
+						UpdateCalculatedTimes();
+						event.preventDefault();
+				}
+				if ( event.which == key.P )
+				{
+						TogglePreview();
+						event.preventDefault();
+				}
+		} );
+
+		$( "#images" ).on( "click", ".imgblock:not(.gap)", function() {
+						MoveCursor( $( this ) );
+						} );
+
+		$( "#images" ).on( "dblclick", ".cursor", function() {
+						if ( ! window.MyData.preview )
+						{
+							ToggleSelected( $( this ) );
+							UpdateCalculatedTimes();
+						}
+				} );
+
+		$.getJSON( "session.json?name={{ sessionId|urlencode }}", function( data ) {
+				$( document ).data( "json", data );
+				$.each( data.frames, function( i, item ) {
+						/* add a gap element if there has been more than X ms
+						   since previous captured image */
+						if ( item.since_written > 1000 && item.kind == "0" )
+						{
+							var gap = $( "<div>" ).addClass( "imgblock" ).addClass( "gap" );
+							var blank = $( "<img>" ).attr( "src", "gap.png" ).attr( "width", "{{ webcamWidth }}" ).attr( "height", "{{ webcamHeight }}" ).addClass( "imgimg" );
+							blank.appendTo( gap );
+							var title = $( "<div>" ).addClass( "imgtitle" );
+							var gaplen = $( "<span>" ).text( FormatTime( item.since_written ) ).addClass( "gaptime" );
+							gaplen.appendTo( title );
+							title.appendTo( gap );
+							gap.appendTo( "#images" );
+						}
+
+						var wrapper = $( "<div>" ).addClass( "imgblock" );
+						if ( item.kind == "0" ) { wrapper.addClass( "captured" ); }
+						else { wrapper.addClass( "selected" ); }
+						wrapper.attr( "kind", item.kind );
+
+						var img = $( "<img>" ).attr( "src", item.url ).addClass( "imgimg" );
+						img.appendTo( wrapper );
+
+						var title = $( "<div>" ).addClass( "imgtitle" );
+						//var abstime = $( "<span>" ).text( FormatTime( item.time ) + "|" + item.since_captured + "|" + item.since_written ).addClass( "abstime" );
+						var abstime = $( "<span>" ).text( FormatTime( item.time ) ).addClass( "abstime" );
+						var kindlabel = $( "<span>" ).addClass( "kindlabel" );
+						var reltime = $( "<span>" ).addClass( "reltime" );
+
+						reltime.appendTo( title ); /* firefox fix: put float: right first */
+						abstime.appendTo( title );
+						kindlabel.appendTo( title );
+
+						title.appendTo( wrapper );
+
+						// store original json data in the element
+						wrapper.data( "json", item );
+
+						UpdateImgBlock( wrapper );
+
+						wrapper.appendTo( "#images" );
+
+						} );
+				MoveCursor( $( ".imgblock:not(.gap):first" ) );
+				UpdateCalculatedTimes();
+				if ( $( ".captured" ).length ) $( "#tool_preview" ).show();
+				if ( $( ".gap" ).length ) $( "#tool_gaps" ).show();
+				} );
+
+		$( "#tool_gaps" ).click( function() {
+						// 1st unselect everything
+						$( ".selected" ).each( function() { ToggleSelected( $( this ) ); } );
+						$( ".gap" ).each( function() {
+								var next = $( this ).next( ".captured" );
+								if ( next.length )
+								{
+									ToggleSelected( next );
+								} } );
+						UpdateCalculatedTimes();
+						} );
+
+		$( "#tool_clear" ).click( function() {
+						$( ".selected" ).each( function() { ToggleSelected( $( this ) ); } );
+						UpdateCalculatedTimes();
+						} );
+
+		$( "#tool_preview" ).click( TogglePreview );
+
+		Dialogue(
+						"#dialogue"
+						, "#tool_save"
+						, "Save"
+						, function() { return true; }
+						, function() {
+								var data = JSON.stringify( GetSelectedFrames() );
+								$.post( 'session.json?name={{ sessionId|urlencode }}'
+										, 'postselect=' + data, function(){
+										location.reload(); /* reload after save is completed */ }, 'json' );
+						} );
+
+} );
+</script>
+{% endblock -%}
+
+{#--------------------------------------------------------------------------------#}

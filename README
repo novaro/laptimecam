@@ -1,0 +1,139 @@
+LAPTIMECAM
+
+Semi-automatic stopwatch utilising a web camera. Can be used to record times
+and speeds of an individual user on a circular track such as a velodrome.
+
+REQUIREMENTS
+
+a Linux machine (web camera usage is Linux specific)
+
+libzmq3-dev
+
+python-cherrypy3
+python-jinja2
+python-zmq
+
+uvcdynctrl (external utility used for web camera focus control)
+
+LIMITATIONS
+
+Timing is always taken from captured images, there is currently no countdown
+start option. This means that only full laps are possible, and flying start is
+the most natural use (although you could approximate first image from a
+standing start).
+
+BUILDING
+
+Building C++ sources is done with a simple Makefile, with luck 'make' will be
+enough. I've been using clang compiler, but gcc should also work with suitable
+changes to the Makefile.
+
+Web UI front end dependencies are listed in 'get_html_deps.sh'. The script can
+be used to download the required files.
+
+INSTALLATION AND RUNNING
+
+Note: The software should be run in a private LAN. Also consider for example
+using a separate user account.
+
+0) Subdirectories 'html' and 'templates' are assumed to be found in the base
+directory containing 'httpd.py'.
+
+1) First invocation of 'run_capture.py' (or 'httpd.py') will create a default
+configuration file. Check and tweak the configuration if needed. Create
+required directories for captured images and stored sessions.
+
+2) Run 'run_capture.py' to start the image capture daemon.
+
+3) Run 'httpd.py' in parallel to start the web UI back end.
+
+4) Point your browser to the appropriate address. If you're running httpd on
+the local machine, http://localhost:8080/ is the default.
+
+If all goes well, clicking 'preview' on the Setup page should present live feed
+from the camera.
+
+USAGE
+
+Use preview on the Setup page to position the camera and estimate a suitable
+trigger limit. The trigger value indicates difference between consecutive video
+frames, higher meaning more change. Images exceeding the selected limit will be
+captured.
+
+On Capture page, select a session name or use the automatically generated one
+(see also session name prefix/postfix on the Setup page). Once you're finished
+with capture, you will be taken to the individual session page.
+
+Ellipsis images indicate gaps in the timeline. If there are no false positives
+from the motion detector, ideally there'll be captured images of crossing a
+finishing line with gap markers in between.
+
+In the best case all you need to do is click 'select gaps', click 'preview' and
+tweak the key frames by using shift+left/right on the keyboard. Changes are
+reflected in the result table at the top of the page. You may need to deselect
+false positive images. Once you are satisfied, 'save' will finalise the
+session.
+
+Keyboard controls:
+
+left / right     : move the cursor to previous / next image
+page up / down   : move the cursor to previous / next gap
+space            : (un-)select an image
+shift+left/right : drag selection (not across gap borders)
+z                : switch selected image type (normal/split/end)
+p                : switch preview on/off
+
+Note that you should finalise captured sessions before you first restart the
+software and then capture new sessions.
+
+This is because the raw captured images are considered to be temporary, valid
+only during a single execution. The image file numbering resets when the
+capture daemon is started, so old files from unsaved session can be
+overwritten. When a session is saved, the selected images will be moved to
+persistent storage.
+
+On the sessions listing page you can compare results from different finalised
+sessions. Ordering is possible based on one or more criteria, with a few
+predefined sorting options you can cycle through using 'sort'. Sessions can be
+deleted, multiple selections are possible using the control key.
+
+INTERNALS
+
+Top level architecture is roughly as follows:
+
+.----------------.         .-------------.          .---------.
+| capture daemon |<--zmq-->| http daemon |<--http-->| browser |
+'----------------'         '-------------'          '---------'
+            ^  |                  ^
+.--------.  |  |  .------------.  |
+| webcam |<-'  '->| filesystem |<-'
+'--------'        '------------'
+
+TWEAKING PERFORMANCE
+
+RAM disk could be used for storing captured images (capture directory can be
+set in the configuration file). The raw captured images are not intended to be
+persistent over multiple executions, so non-persistent storage is not an issue.
+
+As a future update, it should be relatively simple to allow serving static
+files using a dedicated web server leaving only dynamic content to the CherryPy
+server.
+
+COPYRIGHT AND LICENSING
+
+Copyright (C) 2015 Mikko Novaro
+Other copyright holders attributed on a per file basis.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+

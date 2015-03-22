@@ -1,0 +1,162 @@
+{#
+ # laptimecam
+ # Copyright (C) 2015 Mikko Novaro
+ #
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public License
+ # as published by the Free Software Foundation; either version 2
+ # of the License, or (at your option) any later version.
+ # 
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-#}
+
+{% extends "layout.html" -%}
+{% set activePage = "Sessions" -%}
+
+{#--------------------------------------------------------------------------------#}
+
+{% block head -%}
+<link rel="stylesheet" type="text/css" href="dialogue.css">
+<script type="text/javascript" src="dialogue.js"></script>
+<script type="text/javascript" src="session.js"></script>
+<script type="text/javascript" src="import/jquery.tablesorter.js"></script>
+{# https://github.com/Box9/jss #}
+<script type="text/javascript" src="import/jss.js"></script>
+{% endblock -%}
+
+{#--------------------------------------------------------------------------------#}
+
+{% block content -%}
+
+<div style="display: inline-block">
+<table id="sessionTable" class="resulttable tablesorter">
+		<thead>
+				<tr><th>Session</th><th class="sorter-false">Segment</th><th>Laps</th><th>Distance</th><th>Total time</th><th>Avg. speed</th></tr>
+		</thead>
+		<tbody>
+{% for s in sessions -%}
+<tr class="row{{ loop.index }}">
+		<td class="name"><a href="?page=session&name={{ s|urlencode }}">{{ s }}</a></td>
+		<td class="segment"></td>
+		<td class="laps"></td>
+		<td class="dist"></td>
+		<td class="time"></td>
+		<td class="speed"></td>
+</tr>
+{% endfor -%}
+</tbody>
+</table>
+
+<div style="text-align: right">
+<span id="tool_sort" class="button">Sort</span>
+<span id="tool_clear" class="button">Clear</span>
+<span id="tool_delete" class="button">Delete</span>
+</div>
+</div>
+
+{% endblock -%}
+
+{#--------------------------------------------------------------------------------#}
+
+{% block bodyend -%}
+<div id="dialogue" style="display: none">
+		Delete <span id="delete_number"></span> permanently:
+		<div id="delete_list" style="text-align: left ; margin-top: 10px ; display: inline-block"></div>
+</div>
+
+<script>
+
+function GetSelectedSessions ()
+{
+		var set = {};
+		for ( key in window.MyData.selected )
+		{
+				if ( window.MyData.selected[ key ] === true )
+				{
+						var name = $( "." + key ).first().find( ".name:first" ).text();
+						set[ name ] = true;
+				}
+		}
+		return set;
+}
+
+/* Chain session deletions recursively and reload page at the end. */
+function DeleteSessions ( sessions )
+{
+		var empty = true;
+		for ( var name in sessions )
+		{
+				empty = false;
+				delete sessions[ name ];
+				$.getJSON( "session.json?name=" + encodeURIComponent( name ) + "&delete", function() {
+								DeleteSessions( sessions ); } );
+				break;
+		}
+		if ( empty )
+		{
+				location.reload();
+		}
+}
+
+$( document ).ready( function() {
+
+		window.MyData = {
+			sessions : {{ sessions }}
+			, selected : {}
+			, orderIndex : 0
+			, orderings : [ [[0,1]] , [[3,0],[4,0]] , [[5,1]] ]
+		};
+
+		/* prevent session selection from clicking the single session link */
+		$( ".name > a" ).click( function( ev ) { ev.stopPropagation(); } );
+
+		$( "#sessionTable" ).tablesorter( {
+				sortList : [[ 0, 1 ]]
+		} );
+
+		for ( var i = 0, name ; name = window.MyData.sessions[ i ] ; i++ )
+		{
+				$.getJSON( "session.json?name=" + encodeURIComponent( name ), UpdateSessionRow ( "row" + ( i + 1 ) ) );
+		}
+
+		$( "#tool_clear" ).click( ClearSelections );
+		$( "#tool_sort" ).click( function() {
+				window.MyData.orderIndex = ( window.MyData.orderIndex + 1 ) % window.MyData.orderings.length;
+				$( "#sessionTable" ).trigger( "sorton", [ window.MyData.orderings[ window.MyData.orderIndex ] ] );
+				} );
+
+		Dialogue( "#dialogue", "#tool_delete", "Delete"
+						, function() {
+								var selectedSet = GetSelectedSessions();
+								var size = Object.keys( selectedSet ).length;
+								if ( size )
+								{
+									if ( size == 1 )
+											$( "#delete_number" ).text( "a session" );
+									else
+											$( "#delete_number" ).text( size + " sessions" );
+									var list = $( "#delete_list" );
+									list.empty();
+									for ( name in selectedSet )
+									{
+											list.append( document.createTextNode( name ) ).append( $( "<br>" ) );
+									}
+									return true;
+								}
+								else
+								{
+									return false;
+								}
+						}
+						, function() {
+								DeleteSessions( GetSelectedSessions() );
+						} );
+} );
+</script>
+{% endblock -%}

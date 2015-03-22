@@ -1,0 +1,183 @@
+{#
+ # laptimecam
+ # Copyright (C) 2015 Mikko Novaro
+ #
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public License
+ # as published by the Free Software Foundation; either version 2
+ # of the License, or (at your option) any later version.
+ # 
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-#}
+
+{% extends "Main.css" -%}
+{% set pageColour = "#50e0ff" -%}
+{% set selColourText = "White" -%}
+
+{% block style -%}
+
+{% from "CommonSession.css" import commonsession -%}
+{{ commonsession( bgColourLight, bgColourDark, bgColourDark ) }}
+
+.resulttable tbody td {
+		padding-right: 40px;
+}
+.segmentstart td {
+		border-top: 3px solid {{ bgColourMedium }};
+}
+td.finalresult {
+		color: green;
+		font-weight: bold;
+		white-space: nowrap;
+}
+
+.imgimg {
+		width: 100%;
+}
+.imgblock {
+		float: left;
+		border-style: solid;
+		border-width: 1px;
+		border-color: LightGray;
+		margin: 5px;
+		padding: 10px;
+		background-color: White;
+		overflow:hidden;
+
+		border-top-left-radius:     4px;
+		border-top-right-radius:    4px;
+		border-bottom-left-radius:  4px;
+		border-bottom-right-radius: 4px;
+}
+.imgtitle {
+		width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		/*text-align: center;*/
+		/* background-color: DarkGray; */
+		/*font-weight: bold;*/
+		/*
+		padding-left: 10px;
+		padding-right: 10px;
+		*/
+}
+.abstime { float: left; }
+.reltime { float: right; }
+.kindlabel {
+		margin-left: 10px;
+		color: Red;
+		font-size: 90%;
+		letter-spacing: -1px;
+		font-weight: 900;
+		text-transform: uppercase;
+		font-family: monospace;
+}
+.gaptime { width: 100%; text-align: center; }
+.selected {
+		background-color: {{ selColour }};
+		border-color:     {{ selColour }};
+		color:            {{ selColourText }};
+}
+.selected img { outline: 3px solid {{ selColourText }}; }
+.gap { clear: both; }
+.cursor {
+		border-color: Black;
+		background-color: black;
+		color: white;
+		box-shadow: 0px 0px 20px Black;
+		/*outline: 4px solid Black;*/
+		/*
+		border-top-left-radius:     initial;
+		border-top-right-radius:    initial;
+		border-bottom-left-radius:  initial;
+		border-bottom-right-radius: initial;
+		*/
+}
+.cursor.selected {
+		background-color: {{ selColourCursor }};
+		border-color:     {{ selColourCursor }};
+		color:            {{ selColourText }};
+}
+.cursor.selected img {
+	/*outline: 4px solid #440;*/
+}
+.tools {
+		position: fixed;
+		bottom: 10px;
+		right: 10px;
+}
+
+.blob {
+		/*width: 200px;*/
+		position: absolute;
+		bottom: 1.7em;
+		left: -15px;
+		padding: 10px;
+		/*margin: 1em 0 3em;*/
+		color: #000;
+		background: White;
+		border: 3px solid green;
+		border-radius: 6px;
+		display: block;
+		text-align: left;
+		display: none;
+		font-weight: normal;
+		cursor: auto;
+		font-family: Signika, sans-serif;
+		/*font-size: initial;*/
+}
+.blob:before {
+		content: "";
+		display: block;
+		position: absolute;
+		bottom: -15px;
+		left: 10px;
+		width: 0;
+		border-width: 15px 10px 0;
+		border-style: solid;
+		border-color: green transparent;
+}
+.blob:after {
+		content: "";
+		display: block;
+		position: absolute;
+		bottom: -11px;
+		bottom: -10px;
+		left: 13px;
+		width: 0;
+		border-width: 11px 7px 0;
+		border-style: solid;
+		border-color: white transparent;
+}
+.info {
+		cursor: pointer;
+		margin-left: 5px;
+		width:  1em;
+		height: 1em;
+		border-radius: 50%;
+		/*
+		background: green;
+		color: white;
+		*/
+		color: green;
+		text-align: center;
+		position: absolute;
+		top: 0.1em;
+		display: inline-block;
+		font-family: sans-serif;
+		font-weight: bold;
+		font-size: 90%;
+}
+.hidden {
+		display: none;
+}
+.finalresult:hover span.hidden { display: inline-block; }
+
+{% endblock -%}

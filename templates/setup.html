@@ -1,0 +1,152 @@
+{#
+ # laptimecam
+ # Copyright (C) 2015 Mikko Novaro
+ #
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public License
+ # as published by the Free Software Foundation; either version 2
+ # of the License, or (at your option) any later version.
+ # 
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-#}
+
+{% extends "layout.html" -%}
+{% set activePage = "Setup" -%}
+
+{#--------------------------------------------------------------------------------#}
+
+{% block content -%}
+
+<div class="mainitem" id="preview_toggle" style="cursor: pointer">
+	Preview <input id="check_preview" style="vertical-align: middle ; cursor: pointer" type="checkbox"/>
+	<div class="mainitemcontents">
+		<div id="preview">
+				<img id="img_preview" class="webcamimg" src="preview.jpg" width="{{ webcamWidth }}" height="{{ webcamHeight }}"/>
+				<div>Trigger level: <span id="preview_trigger"></span> (10s max)</div>
+		</div>
+	</div>
+</div>
+
+<hr/>
+
+<div class="mainitem">
+Settings
+<div class="mainitemcontents">
+<table>
+<tr>
+	<td class="settingskey">Trigger level:</td>
+	<td class="settingsvalue"><input id="trigger" class="configurable" type="text"/>
+		<span class="settingshelp" title="Motion detection trigger limit, value range 0.0-1.0. Lower means more sensitive. Use preview to estimate suitable value."><img/></span>
+	</td>
+</tr>
+{#
+<tr>
+	<td class="settingskey">Focus distance:</td>
+	<td class="settingsvalue"><input id="focus" class="configurable" type="text"/>
+		<span class="settingshelp" title="Manual focus distance, value range 0.0-1.0"><img/></span>
+	</td>
+</tr>
+<tr>
+	<td class="settingskey">Image capture limit:</td>
+	<td class="settingsvalue"><input id="image_limit" class="configurable" type="text"/></td>
+</tr>
+#}
+<tr>
+	<td class="settingskey">Session name prefix:</td>
+	<td class="settingsvalue"><input id="session_prefix" class="configurable" type="text"/></td>
+</tr>
+<tr>
+	<td class="settingskey">Session name suffix:</td>
+	<td class="settingsvalue"><input id="session_suffix" class="configurable" type="text"/></td>
+</tr>
+<tr>
+	<td class="settingskey">Lap length:</td>
+	<td class="settingsvalue"><input id="lap_length" class="configurable" type="text"/> meters</td>
+</tr>
+</table>
+</div>
+</div>
+
+{% endblock -%}
+
+{#--------------------------------------------------------------------------------#}
+
+{% block head -%}
+<script>
+
+function ReloadPreview()
+{
+	document.getElementById( "img_preview" ).src = "preview.jpg?rnd=" + Math.random();
+	$.getJSON( "preview.json", function( data ) {
+						$( "#preview_trigger" ).text( data.trigger );
+					} );
+}
+
+</script>
+{% endblock -%}
+
+{#--------------------------------------------------------------------------------#}
+
+{% block bodyend -%}
+<script>
+$( document ).ready( function() {
+
+$( "#check_preview" ).prop( "checked", false );
+
+function ValidateAndSetConfig ( element )
+{
+	var key = element.attr( 'id' );
+	var value = element.val();
+	$.getJSON(
+			"config.json?key=" + encodeURIComponent( key ) + "&val=" + encodeURIComponent( value )
+			, function( data ) { element.val( data.val ) } // closure, so element will refer to the correct object
+			);
+}
+
+function LoadConfig ( element )
+{
+	var key = element.attr( 'id' );
+	$.getJSON(
+			"config.json?key=" + encodeURIComponent( key )
+			, function( data ) { element.val( data.val ) }
+			);
+}
+
+$( ".configurable" ).each( function( index ) {
+				LoadConfig( $( this ) );
+				$( this ).change( function() {
+						ValidateAndSetConfig( $( this ) )
+						} );
+				} );
+
+$( "#preview_toggle" ).click( function() {
+				var preview = $( "#preview" );
+				if ( preview.css( 'display' ) == 'none' )
+				{
+					/* Enable preview */
+					$.getJSON( "mode?name=preview" );
+					$( "#check_preview" ).prop( "checked", true );
+					$( this ).data( 'mytimer', setInterval( ReloadPreview, 1000 ) );
+					preview.show();
+				}
+				else
+				{
+					/* Disable preview */
+					$.getJSON( "mode?name=idle" );
+					$( "#check_preview" ).prop( "checked", false );
+					$( "#img_preview" ).attr( "src", "preview.jpg?rnd=" + Math.random() );
+					clearInterval( $( this ).data( 'mytimer' ) );
+					preview.hide();
+				}
+			} );
+} );
+
+</script>
+{% endblock -%}
+

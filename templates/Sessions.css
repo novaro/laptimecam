@@ -1,0 +1,90 @@
+{#
+ # laptimecam
+ # Copyright (C) 2015 Mikko Novaro
+ #
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public License
+ # as published by the Free Software Foundation; either version 2
+ # of the License, or (at your option) any later version.
+ # 
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-#}
+
+{% extends "Main.css" -%}
+{% set pageColour = "#202020" -%}
+
+{% block style -%}
+
+{% from "CommonSession.css" import commonsession -%}
+{{ commonsession( bgColourLight, fgColourMedium, bgColourMedium ) }}
+
+.tablesorter .header,
+.tablesorter .tablesorter-header {
+	background-image: url(data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==);
+	background-position: center right;
+	background-repeat: no-repeat;
+	cursor: pointer;
+	white-space: normal;
+	padding-right: 40px;
+}
+.tablesorter thead .headerSortUp,
+.tablesorter thead .tablesorter-headerSortUp,
+.tablesorter thead .tablesorter-headerAsc {
+	background-color: {{ footColour }};
+	background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjI8Bya2wnINUMopZAQA7);
+}
+.tablesorter thead .headerSortDown,
+.tablesorter thead .tablesorter-headerSortDown,
+.tablesorter thead .tablesorter-headerDesc {
+	background-color: {{ footColour }};
+	background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjB+gC+jP2ptn0WskLQA7);
+}
+.tablesorter thead .sorter-false {
+	background-image: none;
+	cursor: default;
+	padding: 4px;
+	color: #777;
+}
+
+.tablesorter tbody td {
+}
+
+{#
+/* Zebra Widget - row alternating colors */
+.tablesorter tr.odd td {
+	background-color: White;
+}
+.tablesorter tr.even td {
+	background-color: #dfdfdf;
+}
+#}
+
+/* hovered row colors */
+.tablesorter tbody tr:hover > td {
+		color: {{ bgColourLight }};
+		background-color: #004;
+}
+.tablesorter tbody tr.selected:hover > td {
+		background-color: {{ selColourCursor }};
+}
+
+/* link colouring */
+.tablesorter a {
+		color: #737;
+		text-decoration: none;
+}
+.tablesorter tr:hover a {
+		/*color: #404;*/
+		color: {{ bgColourLight }};
+}
+.tablesorter a:hover {
+		text-decoration: underline;
+}
+
+{% endblock -%}

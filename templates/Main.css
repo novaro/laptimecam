@@ -1,0 +1,167 @@
+{#
+ # laptimecam
+ # Copyright (C) 2015 Mikko Novaro
+ #
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public License
+ # as published by the Free Software Foundation; either version 2
+ # of the License, or (at your option) any later version.
+ # 
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-#}
+
+{% set tabWidth         = '80px'        -%}
+{% set tabHeight        = '40px'        -%}
+{% set bgColourDark     = '#505050'     -%}
+{% set bgColourMedium   = 'DarkGray'    -%}
+{% set bgColourLight    = '#f0f0f0'     -%}
+{% set fgColourMedium   = '#606060'     -%}
+{% set radius           = '4px'         -%}
+{% set buttonRadius     = '6px'         -%}
+{% set tabTextPassive   = bgColourLight -%}
+{% set tabTextPassiveHi = bgColourDark  -%}
+{% set buttonColour     = 'black'       -%}
+{% set footColour       = '#779'        -%}
+{% set selColour        = "#aa0"        -%}
+{% set selColourCursor  = "#550"        -%}
+
+@font-face {
+    font-family: Signika;
+    src: url( import/Signika-Regular.ttf );
+}
+body {
+		font-family: Signika, sans-serif;
+		background-color: {{ bgColourDark }};
+		color: black;
+		/*font-weight: bold;*/
+}
+input[type=text] {
+		font-size: 16px;
+}
+}#wrapper {
+		margin-left: 20;
+		margin-right: auto;
+}
+
+#maincontainer {
+		margin: 0px;
+		padding-left: 10px;
+		padding-right: 10px;
+		background-color: {{ bgColourLight }};
+		border-top-right-radius: {{ radius }};
+}
+
+#maincontent {
+		padding: 10px;
+		padding-bottom: 20px;
+}
+
+#footer {
+		border-bottom-left-radius: {{ radius }};
+		border-bottom-right-radius: {{ radius }};
+		margin: 0px;
+		margin-top: 0px;
+		padding: 0px;
+		width: 100%;
+		height: 15px;
+		/*background-color: {{ pageColour }};*/
+		background-color: {{ footColour }};
+}
+
+.mainitem {
+		margin-top: 10px;
+		margin-bottom: 10px;
+		clear: both;
+}
+.mainitemcontents {
+		color: {{ fgColourMedium }};
+		margin-left: 5%;
+		padding-top: 10px;
+}
+
+{#--------------------------------------------------------------------------------#}
+
+.tabs {
+		margin: 0px;
+		padding: 0px;
+		background-color: {{ bgColourDark }};
+		font-weight: bold;
+		/*display: inline-block;*/
+		border-collapse: collapse;
+		border: 0px;
+}
+.tabs td {
+		margin: 0px;
+		padding: 0px;
+		height: {{ tabHeight }};
+		text-align: center;
+		border-top-left-radius: {{ radius }};
+		border-top-right-radius: {{ radius }};
+}
+.activetab {
+		width: {{ tabWidth }};
+		background-color: {{ bgColourLight }};
+		cursor: default;
+		border: 0px;
+}
+.passivetab {
+		background-color: {{ bgColourMedium }};
+		cursor: pointer;
+		color: {{ tabTextPassive }};
+}
+.passivetab a
+{
+		margin: 0px;
+		padding: 0px;
+		width: {{ tabWidth }};
+		height: {{ tabHeight }};
+		display: table-cell;
+		vertical-align: middle;
+		text-decoration: none;
+		color: {{ tabTextPassive }};
+}
+.passivetab a:hover {
+		color: {{ tabTextPassiveHi }};
+}
+.tabdivider {
+		width: 5px;
+		background-color: {{ bgColourDark }};
+}
+.button {
+		cursor: pointer;
+		background-color: {{ buttonColour }};
+		padding: 3px 7px;
+		border-style: solid;
+		border-width: 2px;
+		border-color: {{ buttonColour }};
+		color: {{ bgColourLight }};
+		border-top-left-radius: {{ buttonRadius }};
+		border-top-right-radius: {{ buttonRadius }};
+		border-bottom-left-radius: {{ buttonRadius }};
+		border-bottom-right-radius: {{ buttonRadius }};
+		text-decoration: none;
+		font-family: sans-serif;
+		font-size: 120%;
+		/*font-weight: bold;*/
+		-webkit-user-select: none;  
+		-moz-user-select: none;    
+		-ms-user-select: none;      
+		user-select: none;
+}
+.button:hover {
+		/*background-color: inherit;*/
+		background-color: {{ bgColourLight }};
+		color: {{ buttonColour }};
+}
+.buttontoggle {
+		background-color: White;
+		color: {{ buttonColour }};
+}
+
+{% block style -%}{% endblock -%}

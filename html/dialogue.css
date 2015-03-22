@@ -1,0 +1,56 @@
+/*
+ * laptimecam
+ * Copyright (C) 2015 Mikko Novaro
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+.dialogue {
+		padding: 7px;
+		position: fixed;
+		width: 300px;
+		top: 50%;
+		left: 50%;
+		margin-left: -150px;
+		-webkit-transform: translateY( -50% );
+		transform: translateY( -50% );
+
+		background-color: Red;
+		background: linear-gradient( to bottom right, white, #999 );
+		text-align: center;
+		border-top-left-radius:     6px;
+		border-top-right-radius:    6px;
+		border-bottom-left-radius:  6px;
+		border-bottom-right-radius: 6px;
+		z-index: 100;
+		display: none;
+}
+.dialogueInner {
+		border-top-left-radius:     6px;
+		border-top-right-radius:    6px;
+		border-bottom-left-radius:  6px;
+		border-bottom-right-radius: 6px;
+		padding: 7px;
+		background: linear-gradient( white, #999 );
+}
+.blinds {
+		top: 0;
+		left: 0;
+		position: fixed;
+		width: 100%;
+		height: 100%;
+		background: rgba( 0, 0, 0, 0.7 );
+		z-index: 50;
+		display: none;
+}

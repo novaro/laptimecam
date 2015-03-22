@@ -1,0 +1,92 @@
+{#
+ # laptimecam
+ # Copyright (C) 2015 Mikko Novaro
+ #
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public License
+ # as published by the Free Software Foundation; either version 2
+ # of the License, or (at your option) any later version.
+ # 
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ # GNU General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-#}
+
+{% set webcamWidth  = "320" -%}
+{% set webcamHeight = "240" -%}
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, user-scalable=no">
+<title>laptimecam</title>
+<link rel="stylesheet" type="text/css" href="style.css?page={{ activePage }}">
+<script src="import/jquery.js"></script>
+<script>
+{# common javascript -#}
+function pad ( str, max ) {
+		str = str.toString();
+		return str.length < max ? pad("0" + str, max) : str;
+}
+</script>
+{% block head -%}
+{% endblock -%}
+</head>
+
+<body>
+
+<div id="wrapper">
+
+<table class="tabs"><tr>
+{% set pages = [
+	('Setup', '?page=setup')
+	, ('Capture', '?page=capture')
+	, ('Sessions', '?page=sessions')
+] -%}
+{% for name, url in pages -%}
+{% if name == activePage -%}
+<td class="activetab">{{ name }}</td>
+{% else -%}
+<td class="passivetab"><a href="{{ url }}">{{ name }}</a></td>
+{% endif -%}
+<td class="tabdivider">&nbsp;</td>
+{% endfor -%}
+{% if not activePage in [ 'Setup', 'Capture', 'Sessions' ] -%}
+<td class="activetab">&nbsp;</td>
+{% endif -%}
+</tr></table>
+
+<div id="maincontainer">
+<div id="maincontent">
+
+{% block content -%}
+{% endblock -%}
+
+</div> <!-- maincontent -->
+</div> <!-- maincontainer -->
+
+<div id="footer">&nbsp;</div>
+
+</div> <!-- wrapper -->
+
+{#--------------------------------------------------------------------------------
+ #
+ # Put rest of the javascript stuff here
+ #
+ #}
+
+{#
+<script>
+$.getJSON( "mode?name=idle" );
+</script>
+-#}
+
+{% block bodyend -%}
+{% endblock -%}
+
+</body>
+</html>
