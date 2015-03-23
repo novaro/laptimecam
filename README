@@ -8,6 +8,7 @@ REQUIREMENTS
 a Linux machine (web camera usage is Linux specific)
 
 libzmq3-dev
+libjpeg8-dev (other versions may also work)
 
 python-cherrypy3
 python-jinja2
